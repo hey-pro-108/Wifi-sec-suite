@@ -84,4 +84,54 @@ show_menu() {
 
 while true; do
     show_menu
+done        echo "[3] Quick Vulnerability Scan (Requires Auth)"
+        echo "[4] Full Security Audit (Requires Auth)"
+        echo "[5] Block Suspicious IP"
+        echo "[6] View Threat Log"
+        echo "[7] Generate Report"
+        echo "[8] Exit"
+        echo ""
+        echo -n "Select option: "
+        read -r choice
+        
+        case $choice in
+            1) start_monitor ;;
+            2) router_login ;;
+            3) echo "[ERROR] Please authenticate first (option 2)"; sleep 2 ;;
+            4) echo "[ERROR] Please authenticate first (option 2)"; sleep 2 ;;
+            5) block_ip_interactive ;;
+            6) view_threats ;;
+            7) generate_report ;;
+            8) echo "Exiting..."; exit 0 ;;
+            *) echo "Invalid option"; sleep 1 ;;
+        esac
+    else
+        echo "[1] Start Monitor (MITM/ARP/Brute Force Detection)"
+        echo "[2] Re-authenticate Router"
+        echo "[3] Quick Vulnerability Scan"
+        echo "[4] Full Security Audit"
+        echo "[5] Block Suspicious IP"
+        echo "[6] View Threat Log"
+        echo "[7] Generate Report"
+        echo "[8] Exit"
+        echo ""
+        echo -n "Select option: "
+        read -r choice
+        
+        case $choice in
+            1) start_monitor ;;
+            2) router_login ;;
+            3) quick_scan ;;
+            4) full_audit ;;
+            5) block_ip_interactive ;;
+            6) view_threats ;;
+            7) generate_report ;;
+            8) echo "Exiting..."; exit 0 ;;
+            *) echo "Invalid option"; sleep 1 ;;
+        esac
+    fi
+}
+
+while true; do
+    show_menu
 done
