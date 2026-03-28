@@ -16,7 +16,7 @@ get_platform() {
 
 get_gateway() {
     local platform=$(get_platform)
-    
+
     case $platform in
         TERMUX|LINUX|WSL)
             ip route | grep default | awk '{print $3}' | head -1
@@ -32,7 +32,7 @@ get_gateway() {
 
 get_local_ip() {
     local platform=$(get_platform)
-    
+
     case $platform in
         TERMUX|LINUX|WSL)
             ip route get 1 | awk '{print $NF;exit}' 2>/dev/null
@@ -52,7 +52,7 @@ get_local_mac() {
 
 get_connected_ssid() {
     local platform=$(get_platform)
-    
+
     case $platform in
         TERMUX)
             if command -v termux-wifi-connectioninfo >/dev/null 2>&1; then
@@ -62,10 +62,11 @@ get_connected_ssid() {
             fi
             ;;
         LINUX)
-            nmcli -t -f active,ssid dev wifi | grep "^yes:" | cut -d: -f2 2>/dev/null
+            nmcli -t -f active,ssid dev wifi 2>/dev/null | grep "^yes:" | cut -d: -f2
             ;;
         MACOS)
-            /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I | grep " SSID:" | awk '{print $2}'
+            /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I \
+                | grep " SSID:" | awk '{print $2}'
             ;;
         *)
             echo "Unknown"
@@ -79,19 +80,19 @@ init_config() {
     REPORT_DIR="$BASE_DIR/reports"
     BLOCKLIST_FILE="$BASE_DIR/blocklist.txt"
     THREAT_LOG="$LOG_DIR/threats.log"
-    
+
     mkdir -p "$BASE_DIR" "$LOG_DIR" "$REPORT_DIR" 2>/dev/null
     touch "$BLOCKLIST_FILE" "$THREAT_LOG"
-    
+
     export BASE_DIR LOG_DIR REPORT_DIR BLOCKLIST_FILE THREAT_LOG
 }
 
 check_dependencies() {
     local platform=$(get_platform)
-    
+
     echo "[INFO] Platform detected: $platform"
     echo ""
-    
+
     case $platform in
         TERMUX)
             if ! command -v termux-wifi-scaninfo >/dev/null 2>&1; then
@@ -104,12 +105,12 @@ check_dependencies() {
             fi
             ;;
     esac
-    
+
     if ! command -v nmap >/dev/null 2>&1; then
         echo "[WARN] nmap not found. Pentest features limited."
         echo "[INFO] Install: pkg install nmap (Termux) | sudo apt install nmap (Linux)"
     fi
-    
+
     if ! command -v curl >/dev/null 2>&1; then
         echo "[WARN] curl not found. Install: pkg install curl"
     fi
@@ -120,7 +121,7 @@ log_threat() {
     local source=$2
     local detail=$3
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
+
     echo "$timestamp|$type|$source|$detail" >> "$THREAT_LOG"
     echo "[THREAT] $type detected from $source - $detail"
 }
@@ -128,18 +129,20 @@ log_threat() {
 block_ip() {
     local ip=$1
     local platform=$(get_platform)
-    
+
     echo "$ip" >> "$BLOCKLIST_FILE"
     echo "[INFO] IP $ip added to blocklist"
-    
+
     case $platform in
         LINUX)
             if command -v iptables >/dev/null 2>&1; then
-                sudo iptables -A INPUT -s "$ip" -j DROP 2>/dev/null && echo "[INFO] IP blocked via iptables"
+                sudo iptables -A INPUT -s "$ip" -j DROP 2>/dev/null && \
+                    echo "[INFO] IP blocked via iptables"
             fi
             ;;
         MACOS)
-            sudo pfctl -t blocklist -T add "$ip" 2>/dev/null && echo "[INFO] IP blocked via pf"
+            sudo pfctl -t blocklist -T add "$ip" 2>/dev/null && \
+                echo "[INFO] IP blocked via pf"
             ;;
     esac
 }
@@ -147,7 +150,7 @@ block_ip() {
 block_ip_interactive() {
     echo -n "Enter IP to block: "
     read -r ip
-    
+
     if [[ "$ip" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
         block_ip "$ip"
     else
